@@ -4,6 +4,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pickle
 from dotenv import load_dotenv
+from dataprocessor import DataProcessor
+from webscraper import WebScraper
 from search_engine import SearchEngine
 from elastic_helpers import ESBulkIndexer
 from api_services import SearchService, SearchRequest
@@ -23,6 +25,12 @@ app = FastAPI()
 
 # Initialize SearchEngine
 search_engine = SearchEngine()
+
+# Initialize WebScraper
+webscraper = WebScraper()
+
+# Initialize DataProcessor
+dataprocessor=DataProcessor()
 
 # Initialize Elasticsearch
 ELASTIC_CLOUD_ID = os.environ.get('ELASTIC_CLOUD_ID')
