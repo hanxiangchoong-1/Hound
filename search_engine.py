@@ -81,33 +81,34 @@ class SearchEngine:
             self.logger.debug(traceback.format_exc())
             return None
 
-    def format_search_results(self, search_data):
-        self.logger.info("Formatting search results")
-        formatted_results = {
-            "metadata": {
-                "kind": search_data.get("kind"),
-                "url": search_data.get("url"),
-                "queries": search_data.get("queries"),
-                "context": search_data.get("context"),
-                "searchInformation": search_data.get("searchInformation")
-            },
-            "items": []
-        }
+    # def format_search_results(self, search_data):
+    #     self.logger.info("Formatting search results")
+    #     formatted_results = {
+    #         "metadata": {
+    #             "kind": search_data.get("kind"),
+    #             "url": search_data.get("url"),
+    #             "queries": search_data.get("queries"),
+    #             "context": search_data.get("context"),
+    #             "searchInformation": search_data.get("searchInformation")
+    #         },
+    #         "items": []
+    #     }
         
-        for item in search_data.get("items", []):
-            formatted_item = {
-                "title": item.get("title"),
-                "link": item.get("link"),
-                "snippet": item.get("snippet"),
-                "htmlSnippet": item.get("htmlSnippet"),
-                "displayLink": item.get("displayLink"),
-                "formattedUrl": item.get("formattedUrl"),
-                "htmlFormattedUrl": item.get("htmlFormattedUrl")
-            }
-            formatted_results["items"].append(formatted_item)
+    #     for item in search_data.get("items", []):
+    #         formatted_item = {
+    #             "title": item.get("title"),
+    #             "link": item.get("link"),
+    #             "snippet": item.get("snippet"),
+    #             "htmlSnippet": item.get("htmlSnippet"),
+    #             "displayLink": item.get("displayLink"),
+    #             "formattedUrl": item.get("formattedUrl"),
+    #             "htmlFormattedUrl": item.get("htmlFormattedUrl")
+    #         }
+    #         formatted_results["items"].append(formatted_item)
         
-        self.logger.info(f"Formatted {len(formatted_results['items'])} search results")
-        return formatted_results
+    #     self.logger.info(f"Formatted {len(formatted_results['items'])} search results")
+    #     return formatted_results
+    
     # def search_and_scrape(self, query, num=10):
     #     self.logger.info(f"Starting search and scrape for query: {query}")
     #     results = self.google_custom_search(query, num)
