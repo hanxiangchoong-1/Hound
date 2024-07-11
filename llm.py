@@ -2,7 +2,8 @@ import os
 import logging
 from openai import AsyncOpenAI
 from prompts import CLEAN_TEXT_PROMPT, EXTRACT_ENTITIES_PROMPT, EXTRACT_RELATIONSHIPS_PROMPT
-
+from dotenv import load_dotenv
+load_dotenv()
 # Set up logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

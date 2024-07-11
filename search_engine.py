@@ -6,9 +6,12 @@ import aiohttp
 import random
 import re
 import logging
+import html2text
+import json
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-
+from dotenv import load_dotenv
+load_dotenv()
 # Set up logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -89,7 +92,7 @@ class SearchEngine:
         except Exception as e:
             self.logger.error(f"Error fetching {url}: {str(e)}")
             return None
-
+            
     def extract_content(self, html_content, base_url):
         self.logger.info(f"Extracting content from {base_url}")
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -100,16 +103,18 @@ class SearchEngine:
         def dedupe_list(lst):
             return list(dict.fromkeys(lst))
         
+        # Extract title
         title = soup.title.string if soup.title else ''
         
-        headers = {
-            'h1': dedupe_list([clean_text(h.text) for h in soup.find_all('h1')]),
-            'h2': dedupe_list([clean_text(h.text) for h in soup.find_all('h2')]),
-            'h3': dedupe_list([clean_text(h.text) for h in soup.find_all('h3')])
-        }
+        # Extract headers
+        headers = {}
+        for i in range(1, 7):  # h1 to h6
+            headers[f'h{i}'] = dedupe_list([clean_text(h.text) for h in soup.find_all(f'h{i}')])
         
-        paragraphs = dedupe_list([clean_text(p.text) for p in soup.find_all('p') if clean_text(p.text)])
+        # Extract paragraphs
+        paragraphs = dedupe_list([clean_text(p.text) for p in soup.find_all(['p', 'div', 'span']) if clean_text(p.text)])
         
+        # Extract links
         links = []
         seen_urls = set()
         for a in soup.find_all('a', href=True):
@@ -119,22 +124,40 @@ class SearchEngine:
                 links.append({'text': clean_text(a.text), 'href': full_url})
                 seen_urls.add(full_url)
         
-        meta_description = ''
-        meta_desc_tag = soup.find('meta', attrs={'name': 'description'})
-        if meta_desc_tag:
-            meta_description = clean_text(meta_desc_tag.get('content', ''))
+        # Extract meta tags
+        meta_tags = {}
+        for meta in soup.find_all('meta'):
+            name = meta.get('name', meta.get('property', ''))
+            content = meta.get('content', '')
+            if name and content:
+                meta_tags[name] = clean_text(content)
         
+        # Extract main content
         main_content = ''
-        main_tag = soup.find('main')
-        if main_tag:
-            main_content = clean_text(main_tag.text)
+        for tag in ['main', 'article', 'div[role="main"]', '#content', '.content']:
+            main_tag = soup.select_one(tag)
+            if main_tag:
+                main_content = clean_text(main_tag.get_text(separator=' ', strip=True))
+                break
         
-        if main_content:
-            sentences = re.split(r'(?<=[.!?])\s+', main_content)
-            main_content = '\n'.join(dedupe_list(sentences))
+        # If no main content found, use body
+        if not main_content:
+            main_content = clean_text(soup.body.get_text(separator=' ', strip=True))
         
-        all_text_components = [title, main_content, *paragraphs]
-        all_text = '\n\n'.join(filter(None, all_text_components))
+        # Extract all visible text
+        h = html2text.HTML2Text()
+        h.ignore_links = True
+        h.ignore_images = True
+        all_text = clean_text(h.handle(str(soup)))
+        
+        # Extract structured data
+        structured_data = []
+        for script in soup.find_all('script', type='application/ld+json'):
+            try:
+                data = json.loads(script.string)
+                structured_data.append(data)
+            except json.JSONDecodeError:
+                pass
         
         self.logger.info(f"Content extraction completed for {base_url}")
         return {
@@ -142,9 +165,12 @@ class SearchEngine:
             'headers': headers,
             'paragraphs': paragraphs,
             'links': links,
-            'meta_description': meta_description,
+            'meta_tags': meta_tags,
             'main_content': main_content,
-            'all_text': all_text
+            'all_text': all_text,
+            'structured_data': structured_data,
+            'explored':False,
+            'processed': False
         }
 
     async def scrape_urls(self, items):
@@ -168,6 +194,7 @@ class SearchEngine:
                     base_url = item['link']
                     extracted_content = self.extract_content(html_content, base_url)
                     item.update({
+                        'id':url,
                         'extracted_content': extracted_content,
                         'html_content': html_content
                     })
