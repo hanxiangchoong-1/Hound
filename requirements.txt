@@ -1,0 +1,8 @@
+requests
+beautifulsoup4
+aiohttp
+yake
+google-api-python-client
+python-dotenv
+openai
+traceback
