@@ -78,6 +78,15 @@ async def run(entity):
         with tqdm(total=total_docs, desc="Processing documents") as pbar:
             while len(raw_docs['hits']['hits']) > 0:
                 for doc in raw_docs['hits']['hits']:
+                    # Check if document already exists in processed index
+                    exists_query = {"query": {"term": {"_id": doc['_id']}}}
+                    exists_result = es_query_maker.conn.search(index=processed_index_name, body=exists_query)
+                    
+                    if exists_result['hits']['total']['value'] > 0:
+                        logger.info(f"Document {doc['_id']} already processed. Skipping.")
+                        pbar.update(1)
+                        continue
+
                     processed_doc = await process_document(doc)
                     
                     # Index single processed document
