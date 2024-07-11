@@ -5,7 +5,8 @@ import logging
 from urllib.parse import urlparse
 import traceback
 import time
-
+import nest_asyncio
+nest_asyncio.apply()
 # Set up logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,8 +75,7 @@ class WebScraper:
         total_time = end_time - start_time
         self.logger.info(f"Completed scraping {total_urls} URLs in {total_time:.2f} seconds")
         self.logger.info(f"Successful scrapes: {successful_scrapes}, Failed scrapes: {failed_scrapes}")
-        
         return items
 
-    def scrape_urls_from_list(self, items):
-        return asyncio.get_event_loop().run_until_complete(self.scrape_urls(items))
+    async def scrape_urls_from_list(self, items):
+        return await self.scrape_urls(items)

@@ -85,16 +85,15 @@ class DataProcessor:
         
         self.logger.info(f"Content extraction completed for {base_url}")
         return {
-            'title': title,
-            'headers': headers,
-            'paragraphs': paragraphs,
+            # 'title': title,
+            # 'headers': headers,
+            # 'paragraphs': paragraphs,
             'links': links,
-            'meta_tags': meta_tags,
-            'main_content': main_content,
+            # 'meta_tags': meta_tags,
+            # 'main_content': main_content,
+            'link':base_url,
             'all_text': all_text,
-            'structured_data': structured_data,
-            'explored':False,
-            'processed': False
+            # 'structured_data': structured_data,
         }
 
 

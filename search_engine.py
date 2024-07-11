@@ -11,6 +11,8 @@ import json
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from dotenv import load_dotenv
+import nest_asyncio
+nest_asyncio.apply()
 load_dotenv()
 # Set up logging
 logging.basicConfig(level=logging.INFO,
@@ -25,13 +27,39 @@ class SearchEngine:
         self.base_url = "https://www.googleapis.com/customsearch/v1"
         self.logger = logging.getLogger(__name__)
 
-    def google_custom_search(self, query, num=10, **params):
+    def google_custom_search(self, query, num=10, site_restrict=None, **params):
+        '''
+        site_restrict (str or list, optional): Restricts the search to specific sites or domains. Defaults to None.
+            Can be used in the following ways:
+            - Single domain: "example.com"
+            - Single subdomain: "blog.example.com"
+            - Multiple domains: ["example.com", "anotherexample.com"]
+            - Top-level domain: "gov"
+            - Country-specific domains: "co.uk"
+            - Specific directory: "example.com/blog"
+            - Multiple specific paths: ["example.com/blog", "example.com/news"]
+            - Combination: ["example.com", "blog.anotherexample.com", "gov"]
+        '''
         default_params = {
             'q': query,
             'key': self.api_key,
             'cx': self.search_engine_id,
             'num': num
         }
+
+        # Add site restriction if specified
+        if site_restrict:
+            if isinstance(site_restrict, str):
+                # Single site restriction
+                default_params['siteSearch'] = site_restrict
+            elif isinstance(site_restrict, list):
+                # Multiple site restriction
+                default_params['siteSearch'] = '|'.join(site_restrict)
+            
+            # By default, include only these sites
+            default_params['siteSearchFilter'] = 'i'
+            
+        # Update with any additional parameters
         default_params.update(params)
         
         try:
