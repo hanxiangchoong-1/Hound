@@ -22,6 +22,16 @@ class SearchService:
         self.es_bulk_indexer = es_bulk_indexer
         self.logger = logging.getLogger(__name__)
 
+    @staticmethod
+    def _add_default_fields(item: Dict[str, Any]) -> None:
+        """
+        Add 'explored' and 'processed' fields to the item if they don't exist.
+        """
+        if 'explored' not in item:
+            item['explored'] = False
+        if 'processed' not in item:
+            item['processed'] = False
+
     def perform_search_and_index(self, entity: str, query: str, num: int) -> Dict[str, int]:
         try:
             # Perform Google search
@@ -33,6 +43,10 @@ class SearchService:
 
             # Format search results
             formatted_results = self.search_engine.format_search_results(results)
+
+            # Add explored and processed fields if they don't exist
+            for item in formatted_results['items']:
+                self._add_default_fields(item)
 
             # Prepare index name
             index_name = f"search__{entity}"
