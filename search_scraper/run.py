@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import traceback
 import asyncio
@@ -6,8 +7,12 @@ import argparse
 from dotenv import load_dotenv
 from webscraper import WebScraper
 from search_engine import SearchEngine
+
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
 from elastic_helpers import ESBulkIndexer
-from es_config import BASIC_CONFIG
+from elastic_config import BASIC_CONFIG
+sys.path.pop(0)
 
 load_dotenv()
 
