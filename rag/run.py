@@ -69,13 +69,17 @@ async def run(index_name, query_text, fields, n):
         results = await search_es(index_name, query_text, fields, n)
         
         if results:
-            logger.info("Search results:")
-            for i, result in enumerate(results, 1):
-                logger.info(f"Result {i}:")
-                logger.info(f"ID: {result['id']}")
-                logger.info(f"Score: {result['score']}")
-                logger.info(f"Source: {json.dumps(result['source'], indent=2)}")
-                logger.info("---")
+            context_docs=['\n\n'.join([field+":\n\n"+j['source'][field] for field in fields]) for j in results]
+            logger.info(f"Context:\n\n{context_docs}")
+            response=await llm.basic_qa(context='\n\n'.join(context_docs), query=query_text)
+            logger.info(f"Response:\n\n{response}")
+            # logger.info("Search results:")
+            # for i, result in enumerate(results, 1):
+            #     logger.info(f"Result {i}:")
+            #     logger.info(f"ID: {result['id']}")
+            #     logger.info(f"Score: {result['score']}")
+            #     logger.info(f"Source: {json.dumps(result['source'], indent=2)}")
+            #     logger.info("---")
         else:
             logger.info("No results found.")
 

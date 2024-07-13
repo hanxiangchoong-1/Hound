@@ -24,6 +24,7 @@ Goal: To perform research on a particular entity, and aggregate surface-level in
 6) Centralize logging with logstash 
 7) Improve code comments and in-line documentation
 8) Improve data processing with segmentation. Use GPT-4o for this?
+9) Add vectors to RAG, use hybrid search
 
 ## Setup
 

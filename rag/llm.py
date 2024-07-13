@@ -66,7 +66,7 @@ class LLMProcessor:
         Query: 
         {query}
         '''
-        return await self._execute_task("cleaning text", prompt, BASIC_RAG_PROMPT)
+        return await self._execute_task("RAG answer generation", prompt, BASIC_RAG_PROMPT)
 
     # async def extract_entities(self, text, existing_entities=None):
     #     prompt = text
