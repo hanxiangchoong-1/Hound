@@ -8,7 +8,11 @@ This is an early stage project.
 
 Goal: To perform research on a particular entity, and aggregate surface-level information found into an elasticsearch index, where it can be further processed. 
 
-Ideas for further development:
+## Flow Diagram
+
+![Current Project Flow](./readme_assets/flow.png)
+
+## Ideas for further development:
 
 1) Integrate other search engine options like DuckDuckGo
 2) Make use of search engine targeted at news or academic articles
@@ -62,7 +66,7 @@ And that should be it! Use the commands below to get started.
 * Arg 1: The entity you want to research. Collected docs will be saved to an index "raw__{entity}"
 * Arg 2: The search engine query.
 ```
-python3 ./search_scraper/run.py govtech "govtech sg directors"
+python3 ./search_scraper/run.py govtech "govtech sg significance"
 ```
 
 ### Data Processor
