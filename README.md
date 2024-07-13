@@ -17,6 +17,8 @@ Goal: To perform research on a particular entity, and aggregate surface-level in
 1) Integrate other search engine options like DuckDuckGo
 2) Make use of search engine targeted at news or academic articles
 3) Introduce processing of PDFs, word docs, etc... 
+* * In webscraper
+* * In manual data upload
 4) Improve filtering of articles to prevent wasted LLM utilization 
 5) Improve data cleaning to capture more detailed metadata?
 6) Centralize logging with logstash 
