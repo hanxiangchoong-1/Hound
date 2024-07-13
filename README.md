@@ -37,7 +37,7 @@ source myenv/bin/activate
 myenv\Scripts\activate 
 pip install -r requirements.txt
 ```
-The following credentials are required, so please fill these out with the appropriate values:
+The following credentials are required, so please create a .env file and fill it out with the appropriate values:
 
 ```
 ELASTIC_CLOUD_ENDPOINT=""
