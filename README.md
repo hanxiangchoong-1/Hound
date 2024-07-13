@@ -22,6 +22,12 @@ Ideas for further development:
 
 Project developed on python 3.12.4
 
+This project does assume that you have the following resources available:
+
+* An elastic cloud deployment
+* A Google custom search engine and its API credentials
+* An Azure OpenAI model deployment
+
 Recommended first step is to create and activate a virtual env, then install all dependencies. 
 ```
 python -m venv myenv
@@ -48,19 +54,21 @@ AZURE_OPENAI_ENDPOINT=""
 AZURE_OPENAI_DEPLOYMENT_NAME=""
 ```
 
+And that should be it! Use the comments below to get started. 
+
 ## To Run:
 
 ### Search Scraper
-Arg 1: The entity you want to research. Collected docs will be saved to an index "raw__{entity}"
-Arg 2: The search engine query.
+* Arg 1: The entity you want to research. Collected docs will be saved to an index "raw__{entity}"
+* Arg 2: The search engine query.
 ```
 python3 ./search_scraper/run.py govtech "govtech sg directors"
 ```
 
 ### Data Processor
-Arg 1: The elastic index from which you will pull your documents for cleaning. 
-Arg 2: The column or property containing the text you'd like to clean.
-Arg 3: The elastic index which cleaned documents will be saved to. 
+* Arg 1: The elastic index from which you will pull your documents for cleaning. 
+* Arg 2: The column or property containing the text you'd like to clean.
+* Arg 3: The elastic index which cleaned documents will be saved to. 
 ```
 python3 ./dataprocessor/run.py raw__govtech all_text processed__govtech
 ```
