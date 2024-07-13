@@ -73,7 +73,7 @@ python3 ./search_scraper/run.py govtech "govtech sg significance"
 
 ### Data Processor
 * Arg 1: The elastic index from which you will pull your documents for cleaning. 
-* Arg 2: The column or property containing the text you'd like to clean.
+* Arg 2: The field containing the text you'd like to clean.
 * Arg 3: The elastic index which cleaned documents will be saved to. 
 ```
 python3 ./dataprocessor/run.py raw__govtech all_text processed__govtech

@@ -34,35 +34,35 @@ ELASTIC_CLOUD_AUTH = (ELASTIC_USERNAME, ELASTIC_PASSWORD)
 es_bulk_indexer = ESBulkIndexer(cloud_id=ELASTIC_CLOUD_ID, credentials=ELASTIC_CLOUD_AUTH)
 es_query_maker = ESQueryMaker(cloud_id=ELASTIC_CLOUD_ID, credentials=ELASTIC_CLOUD_AUTH)
 
-async def process_document(doc, text_column):
+async def search_es(index_name, query_text, fields, n):
     try:
-        logger.info(f"Processing document: {doc['_id']}")
+        logger.info(f"Searching index: {index_name} with query: {query_text}")
         
-        # Clean text
-        cleaned_text = await llm.clean_text(doc['_source'][text_column])
+        # Perform the search
+        results = es_query_maker.search_index(index_name, query_text, fields)
         await asyncio.sleep(1)  # 1 second delay
 
-        # # Extract entities
-        # entities = await llm.extract_entities(cleaned_text)
-        # await asyncio.sleep(1)  # 1 second delay
+        # Extract the top n hits
+        hits = results.get('hits', {}).get('hits', [])
+        top_n_results = hits[:n]
 
-        # # Extract relationships
-        # relationships = await llm.extract_relationships(cleaned_text, entities)
+        # Prepare processed results
+        processed_results = []
+        for hit in top_n_results:
+            processed_hit = {
+                'id': hit['_id'],
+                'score': hit['_score'],
+                'source': hit['_source']
+            }
+            processed_results.append(processed_hit)
 
-        # Prepare processed document
-        processed_doc = {k: v for k, v in doc['_source'].items() if k not in ['links', text_column]}
-        processed_doc.update({
-            'cleaned_text': cleaned_text,
-            # 'entities': entities,
-            # 'relationships': relationships
-        })
-
-        return processed_doc
+        logger.info(f"Retrieved {len(processed_results)} results from index: {index_name}")
+        return processed_results
     except Exception as e:
-        logger.error(f"Error processing document {doc['_id']}: {str(e)}")
+        logger.error(f"Error searching index {index_name} with query {query_text}: {str(e)}")
         logger.debug(traceback.format_exc())
-        return None
-
+        return []
+    
 async def run(raw_index_name, text_column, processed_index_name):
     try:
         # Check if processed index exists, create if not
