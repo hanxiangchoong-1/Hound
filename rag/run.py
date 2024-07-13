@@ -7,6 +7,7 @@ import argparse
 from dotenv import load_dotenv
 from llm import LLMProcessor
 from tqdm import tqdm
+import json 
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parent_dir)
@@ -63,71 +64,35 @@ async def search_es(index_name, query_text, fields, n):
         logger.debug(traceback.format_exc())
         return []
     
-async def run(raw_index_name, text_column, processed_index_name):
+async def run(index_name, query_text, fields, n):
     try:
-        # Check if processed index exists, create if not
-        if not es_bulk_indexer.check_index_existence(index_name=processed_index_name):
-            logger.info(f"Creating new index: {processed_index_name}")
-            es_bulk_indexer.create_es_index(es_configuration=BASIC_CONFIG, index_name=processed_index_name)
-
-        # Query all documents from raw index
-        query = {"query": {"match_all": {}}}
-        raw_docs = es_query_maker.conn.search(index=raw_index_name, body=query, scroll='2m', size=1000)
-        scroll_id = raw_docs['_scroll_id']
-        total_docs = raw_docs['hits']['total']['value']
-
-        with tqdm(total=total_docs, desc="Processing documents") as pbar:
-            while len(raw_docs['hits']['hits']) > 0:
-                for doc in raw_docs['hits']['hits']:
-                    try:
-                        # Check if document already exists in processed index
-                        exists_query = {"query": {"term": {"_id": doc['_id']}}}
-                        exists_result = es_query_maker.conn.search(index=processed_index_name, body=exists_query)
-                        
-                        if exists_result['hits']['total']['value'] > 0:
-                            logger.info(f"Document {doc['_id']} already processed. Skipping.")
-                            pbar.update(1)
-                            continue
-                        
-                        processed_doc = await process_document(doc, text_column)
-                        
-                        if processed_doc:
-                            # Index single processed document
-                            success = es_bulk_indexer.bulk_upload_documents(
-                                index_name=processed_index_name,
-                                documents=[processed_doc],
-                                id_col='link'
-                            )
-                            if success:
-                                logger.info(f"Indexed processed document: {processed_doc['link']}")
-                            else:
-                                logger.warning(f"Failed to index processed document: {processed_doc['link']}")
-                        else:
-                            logger.warning(f"Failed to process document: {doc['_id']}")
-                    except Exception as e:
-                        logger.error(f"Error processing or indexing document {doc['_id']}: {str(e)}")
-                        logger.debug(traceback.format_exc())
-                    finally:
-                        pbar.update(1)
-
-                # Get next batch
-                raw_docs = es_query_maker.conn.scroll(scroll_id=scroll_id, scroll='2m')
-
-        logger.info(f"All documents processed. Total: {total_docs}")
+        results = await search_es(index_name, query_text, fields, n)
+        
+        if results:
+            logger.info("Search results:")
+            for i, result in enumerate(results, 1):
+                logger.info(f"Result {i}:")
+                logger.info(f"ID: {result['id']}")
+                logger.info(f"Score: {result['score']}")
+                logger.info(f"Source: {json.dumps(result['source'], indent=2)}")
+                logger.info("---")
+        else:
+            logger.info("No results found.")
 
     except Exception as e:
         logger.error(f"An error occurred during the run: {str(e)}")
         logger.debug(traceback.format_exc())
 
 def main():
-    parser = argparse.ArgumentParser(description="Process and index text content using LLM.")
-    parser.add_argument("raw_index_name", help="Index to draw from")
-    parser.add_argument("text_column", help="Text data column to process")
-    parser.add_argument("processed_index_name", help="Index to upload to")
+    parser = argparse.ArgumentParser(description="Search Elasticsearch index and return results.")
+    parser.add_argument("index_name", help="Index to search")
+    parser.add_argument("query_text", help="Text to search for")
+    parser.add_argument("fields", nargs='+', help="Fields to search in")
+    parser.add_argument("--n", type=int, default=10, help="Number of results to return (default: 10)")
     args = parser.parse_args()
 
     try:
-        asyncio.run(run(args.raw_index_name, args.text_column, args.processed_index_name))
+        asyncio.run(run(args.index_name, args.query_text, args.fields, args.n))
     except Exception as e:
         logger.error(f"An error occurred in main: {str(e)}")
         logger.debug(traceback.format_exc())

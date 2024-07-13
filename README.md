@@ -23,6 +23,7 @@ Goal: To perform research on a particular entity, and aggregate surface-level in
 5) Improve data cleaning to capture more detailed metadata?
 6) Centralize logging with logstash 
 7) Improve code comments and in-line documentation
+8) Improve data processing with segmentation. Use GPT-4o for this?
 
 ## Setup
 
@@ -79,3 +80,14 @@ python3 ./search_scraper/run.py govtech "govtech sg significance"
 python3 ./dataprocessor/run.py raw__govtech all_text processed__govtech
 ```
 
+### Data Uploader
+```
+python3 ./data_uploader/run.py ./test_files rag_test
+```
+
+
+### RAG
+
+```
+python3 ./rag/run.py processed__govtech "govtech" cleaned_text --n 5
+```
