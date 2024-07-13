@@ -34,11 +34,11 @@ ELASTIC_CLOUD_AUTH = (ELASTIC_USERNAME, ELASTIC_PASSWORD)
 es_bulk_indexer = ESBulkIndexer(cloud_id=ELASTIC_CLOUD_ID, credentials=ELASTIC_CLOUD_AUTH)
 es_query_maker = ESQueryMaker(cloud_id=ELASTIC_CLOUD_ID, credentials=ELASTIC_CLOUD_AUTH)
 
-async def process_document(doc):
+async def process_document(doc, text_column):
     logger.info(f"Processing document: {doc['_id']}")
     
     # Clean text
-    cleaned_text = await llm.clean_text(doc['_source']['all_text'])
+    cleaned_text = await llm.clean_text(doc['_source'][text_column])
     await asyncio.sleep(1)  # 1 second delay
 
     # Extract entities
@@ -49,7 +49,7 @@ async def process_document(doc):
     relationships = await llm.extract_relationships(cleaned_text, entities)
 
     # Prepare processed document
-    processed_doc = {k: v for k, v in doc['_source'].items() if k not in ['links', 'all_text']}
+    processed_doc = {k: v for k, v in doc['_source'].items() if k not in ['links', text_column]}
     processed_doc.update({
         'cleaned_text': cleaned_text,
         'entities': entities,
@@ -58,11 +58,8 @@ async def process_document(doc):
 
     return processed_doc
 
-async def run(entity):
+async def run(raw_index_name, text_column, processed_index_name):
     try:
-        # Prepare index names
-        raw_index_name = f"raw__{entity}"
-        processed_index_name = f"processed__{entity}"
 
         # Check if processed index exists, create if not
         if not es_bulk_indexer.check_index_existence(index_name=processed_index_name):
@@ -87,7 +84,7 @@ async def run(entity):
                         pbar.update(1)
                         continue
 
-                    processed_doc = await process_document(doc)
+                    processed_doc = await process_document(doc, text_column)
                     
                     # Index single processed document
                     success = es_bulk_indexer.bulk_upload_documents(
@@ -112,12 +109,13 @@ async def run(entity):
         logger.debug(traceback.format_exc())
 
 def main():
-    parser = argparse.ArgumentParser(description="Process and index web content using LLM.")
-    parser.add_argument("entity", help="The entity to process")
-
+    parser = argparse.ArgumentParser(description="Process and index text content using LLM.")
+    parser.add_argument("raw_index_name", help="Index to draw from")
+    parser.add_argument("text_column", help="Text data column to process")
+    parser.add_argument("processed_index_name", help="Index to upload to")
     args = parser.parse_args()
 
-    asyncio.run(run(args.entity))
+    asyncio.run(run(args.raw_index_name, args.text_column, args.processed_index_name))
 
 if __name__ == "__main__":
     main()
