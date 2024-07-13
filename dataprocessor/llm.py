@@ -1,9 +1,18 @@
 import os
 import logging
-from openai import AsyncOpenAI
+import os
+from openai import AzureOpenAI
 from prompts import CLEAN_TEXT_PROMPT, EXTRACT_ENTITIES_PROMPT, EXTRACT_RELATIONSHIPS_PROMPT
 from dotenv import load_dotenv
 load_dotenv()
+
+client = AzureOpenAI(
+    api_key=os.getenv("AZURE_OPENAI_KEY_1"),  
+    api_version="2024-06-01",
+    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    )
+    
+AZURE_OPENAI_DEPLOYMENT_NAME=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 # Set up logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -14,15 +23,19 @@ class LLMProcessor:
     def __init__(self, api_key=None, model="gpt-4o"):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.model = model
-        self.client = AsyncOpenAI(api_key=self.api_key)
+        self.client = AzureOpenAI(
+                            api_key=os.getenv("AZURE_OPENAI_KEY_1"),  
+                            api_version="2024-06-01",
+                            azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+                            )
         self.logger = logging.getLogger(__name__)
         self.logger.info(f"LLMProcessor initialized with model: {self.model}")
 
     async def _process_request(self, system_prompt, user_prompt):
         self.logger.info(f"Processing request with model: {self.model}")
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
+            response = self.client.chat.completions.create(
+                model=AZURE_OPENAI_DEPLOYMENT_NAME,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -58,3 +71,5 @@ class LLMProcessor:
     async def extract_relationships(self, text, entities):
         prompt = f"Text: {text}\n\nEntities: {entities}"
         return await self._execute_task("extracting relationships", prompt, EXTRACT_RELATIONSHIPS_PROMPT)
+    
+

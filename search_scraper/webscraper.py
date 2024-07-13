@@ -1,4 +1,3 @@
-
 import asyncio
 import aiohttp
 import random
@@ -27,6 +26,12 @@ class WebScraper:
         try:
             self.logger.info(f"Fetching URL: {url}")
             async with session.get(url, headers=headers, timeout=30) as response:
+                # Check if the content is PDF
+                content_type = response.headers.get('Content-Type', '').lower()
+                if 'application/pdf' in content_type:
+                    self.logger.info(f"Skipping PDF content: {url}")
+                    return None
+                
                 content = await response.text()
                 return self.extract_content(content, url)
         except Exception as e:
@@ -84,6 +89,7 @@ class WebScraper:
 
             successful_scrapes = 0
             failed_scrapes = 0
+            skipped_pdfs = 0
 
             for item, task in tasks:
                 try:
@@ -93,8 +99,12 @@ class WebScraper:
                         successful_scrapes += 1
                         self.logger.info(f"Successfully scraped: {item['link']}")
                     else:
-                        failed_scrapes += 1
-                        self.logger.warning(f"Failed to scrape: {item['link']}")
+                        if 'application/pdf' in item.get('content_type', '').lower():
+                            skipped_pdfs += 1
+                            self.logger.info(f"Skipped PDF: {item['link']}")
+                        else:
+                            failed_scrapes += 1
+                            self.logger.warning(f"Failed to scrape: {item['link']}")
                 except Exception as e:
                     failed_scrapes += 1
                     self.logger.error(f"Error scraping {item['link']}: {str(e)}")
@@ -103,7 +113,7 @@ class WebScraper:
         end_time = time.time()
         total_time = end_time - start_time
         self.logger.info(f"Completed scraping {total_urls} URLs in {total_time:.2f} seconds")
-        self.logger.info(f"Successful scrapes: {successful_scrapes}, Failed scrapes: {failed_scrapes}")
+        self.logger.info(f"Successful scrapes: {successful_scrapes}, Failed scrapes: {failed_scrapes}, Skipped PDFs: {skipped_pdfs}")
         return items
 
     async def scrape_urls_from_list(self, items):
