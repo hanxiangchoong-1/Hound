@@ -9,3 +9,4 @@ traceback
 elasticsearch
 tqdm
 html2text
+llama_index
