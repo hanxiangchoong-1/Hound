@@ -54,7 +54,7 @@ AZURE_OPENAI_ENDPOINT=""
 AZURE_OPENAI_DEPLOYMENT_NAME=""
 ```
 
-And that should be it! Use the comments below to get started. 
+And that should be it! Use the commands below to get started. 
 
 ## To Run:
 
