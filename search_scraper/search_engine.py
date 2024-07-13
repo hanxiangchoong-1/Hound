@@ -1,15 +1,7 @@
 import os
 import requests
 import traceback
-import asyncio
-import aiohttp
-import random
-import re
 import logging
-import html2text
-import json
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
 from dotenv import load_dotenv
 import nest_asyncio
 nest_asyncio.apply()
