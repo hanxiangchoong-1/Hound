@@ -21,9 +21,24 @@ logger = logging.getLogger(__name__)
 class WebScraper:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.social_media_domains = [
+            'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
+            'pinterest.com', 'reddit.com', 'tumblr.com', 'snapchat.com',
+            'tiktok.com', 'youtube.com', 'whatsapp.com', 'telegram.org',
+            'medium.com', 'quora.com'
+        ]
+
+    def is_social_media(self, url):
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.lower()
+        return any(social_domain in domain for social_domain in self.social_media_domains)
 
     async def fetch_and_process_url(self, session, url, headers):
         try:
+            if self.is_social_media(url):
+                self.logger.info(f"Skipping social media site: {url}")
+                return None
+
             self.logger.info(f"Fetching URL: {url}")
             async with session.get(url, headers=headers, timeout=30) as response:
                 # Check if the content is PDF
@@ -59,7 +74,7 @@ class WebScraper:
         for a in soup.find_all('a', href=True):
             href = a.get('href')
             full_url = urljoin(base_url, href)
-            if full_url not in seen_urls:
+            if full_url not in seen_urls and not self.is_social_media(full_url):
                 links.append({'text': clean_text(a.text), 'href': full_url})
                 seen_urls.add(full_url)
         
@@ -90,6 +105,7 @@ class WebScraper:
             successful_scrapes = 0
             failed_scrapes = 0
             skipped_pdfs = 0
+            skipped_social_media = 0
 
             for item, task in tasks:
                 try:
@@ -99,7 +115,10 @@ class WebScraper:
                         successful_scrapes += 1
                         self.logger.info(f"Successfully scraped: {item['link']}")
                     else:
-                        if 'application/pdf' in item.get('content_type', '').lower():
+                        if self.is_social_media(item['link']):
+                            skipped_social_media += 1
+                            self.logger.info(f"Skipped social media site: {item['link']}")
+                        elif 'application/pdf' in item.get('content_type', '').lower():
                             skipped_pdfs += 1
                             self.logger.info(f"Skipped PDF: {item['link']}")
                         else:
@@ -113,7 +132,7 @@ class WebScraper:
         end_time = time.time()
         total_time = end_time - start_time
         self.logger.info(f"Completed scraping {total_urls} URLs in {total_time:.2f} seconds")
-        self.logger.info(f"Successful scrapes: {successful_scrapes}, Failed scrapes: {failed_scrapes}, Skipped PDFs: {skipped_pdfs}")
+        self.logger.info(f"Successful scrapes: {successful_scrapes}, Failed scrapes: {failed_scrapes}, Skipped PDFs: {skipped_pdfs}, Skipped social media: {skipped_social_media}")
         return items
 
     async def scrape_urls_from_list(self, items):

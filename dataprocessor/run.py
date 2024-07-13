@@ -42,19 +42,19 @@ async def process_document(doc, text_column):
         cleaned_text = await llm.clean_text(doc['_source'][text_column])
         await asyncio.sleep(1)  # 1 second delay
 
-        # Extract entities
-        entities = await llm.extract_entities(cleaned_text)
-        await asyncio.sleep(1)  # 1 second delay
+        # # Extract entities
+        # entities = await llm.extract_entities(cleaned_text)
+        # await asyncio.sleep(1)  # 1 second delay
 
-        # Extract relationships
-        relationships = await llm.extract_relationships(cleaned_text, entities)
+        # # Extract relationships
+        # relationships = await llm.extract_relationships(cleaned_text, entities)
 
         # Prepare processed document
         processed_doc = {k: v for k, v in doc['_source'].items() if k not in ['links', text_column]}
         processed_doc.update({
             'cleaned_text': cleaned_text,
-            'entities': entities,
-            'relationships': relationships
+            # 'entities': entities,
+            # 'relationships': relationships
         })
 
         return processed_doc

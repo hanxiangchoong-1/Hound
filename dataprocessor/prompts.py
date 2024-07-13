@@ -22,17 +22,19 @@ Please process the following webscraped text according to these guidelines:
 EXTRACT_ENTITIES_PROMPT = '''
 Your task is to perform comprehensive Named Entity Recognition (NER) on the given text. Follow these guidelines:
 
-1. Identify and extract all named entities, including but not limited to:
-   - People
-   - Organizations
-   - Locations
-   - Dates and times
-   - Quantities
-   - Products
-   - Events
-   - Websites
-   - Nations or Geopolitical Entities
-   - Laws and regulations
+1. Extract only the following named entity types:
+   - PERSON: Individual human beings
+   - POSITION: Corporate positions, political offices, organizational rankings
+   - ORGANIZATION: Companies, institutions, agencies, political parties
+   - LOCATION: Geographical locations, landmarks, facilities
+   - DATE: Calendar dates, time periods
+   - TIME: Specific times of day
+   - QUANTITY: Numerical amounts, measurements
+   - PRODUCT: Goods, services, brands
+   - EVENT: Occurrences, happenings, incidents
+   - WEBSITE: Internet domains, URLs
+   - GPE: Nations, states, cities, or other geopolitical entities
+   - LAW: Laws, regulations, legal documents
 
 2. Simplify and standardize the extracted entities as much as possible:
    - Use full names for people (e.g., "John Fitzgerald Kennedy" instead of "Kennedy")
@@ -82,6 +84,7 @@ Your task is to identify relationships between the provided entities based on th
    - CREATES: Denotes authorship, invention, or production
    - LEADS: Indicates leadership or management
    - OWNS: Denotes ownership or possession
+   - HOLDS_POSITION: Denotes holding a corporate rank, political office, or other official appointment
    - OCCURS_ON: Specifies a temporal relationship
    - CREATED_ON: Specifies an entity coming to existence on this date
    - AFFECTS: Indicates influence or impact
